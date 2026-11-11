@@ -1,0 +1,6 @@
+{
+  "name": "MoHCC IT Document Management & Help Desk",
+  "description": "Ministry of Health and Child Care Information Technology Department secure document scanning, encryption, audit trail, and role-based archive system.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

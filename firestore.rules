@@ -1,0 +1,97 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 1. Global Catch-All Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Global Helpers ---
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == "michaelmenelisidube@gmail.com" ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // --- Entity Validators ---
+    function isValidDocument(data) {
+      return data.id is string && data.id.size() <= 64 &&
+             data.referenceNo is string && data.referenceNo.size() <= 64 &&
+             data.title is string && data.title.size() <= 256 &&
+             data.category is string &&
+             data.confidentiality in ['PUBLIC', 'INTERNAL', 'CONFIDENTIAL', 'RESTRICTED_MEDICAL'] &&
+             data.status in ['PENDING_REVIEW', 'APPROVED', 'ARCHIVED', 'FLAGGED'] &&
+             data.ocrText is string;
+    }
+
+    function isValidAuditLog(data) {
+      return data.id is string && data.id.size() <= 64 &&
+             data.action is string && data.action.size() <= 64 &&
+             data.userName is string && data.userName.size() <= 128 &&
+             data.sha256Digest is string && data.sha256Digest.size() == 64;
+    }
+
+    // 2. Official Health and IT Documents Collection
+    match /documents/{documentId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(documentId) && isValidDocument(incoming());
+      allow update: if isSignedIn() && isValidId(documentId) && isValidDocument(incoming()) && (
+        isAdmin() ||
+        incoming().diff(existing()).affectedKeys().hasOnly(['status', 'lastModified', 'reviewHistory', 'summary', 'tags', 'confidentiality', 'category'])
+      );
+      allow delete: if isAdmin();
+    }
+
+    // 3. Cryptographically Chained Audit Log (Strictly Append-Only & Immutable)
+    match /auditLogs/{logId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(logId) && isValidAuditLog(incoming());
+      allow update, delete: if false; // Absolutely immutable
+    }
+
+    // 4. Automated Notifications & Alerts
+    match /notifications/{notificationId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(notificationId);
+      allow update: if isSignedIn() && isValidId(notificationId) && (
+        isAdmin() ||
+        incoming().diff(existing()).affectedKeys().hasOnly(['read'])
+      );
+      allow delete: if isAdmin();
+    }
+
+    // 5. Staff Profiles & RBAC Clearances
+    match /users/{userId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(userId);
+      allow update: if isSignedIn() && isValidId(userId) && (
+        isAdmin() ||
+        (request.auth.uid == userId && incoming().diff(existing()).affectedKeys().hasOnly(['name', 'mfaEnabled', 'biometricActive']))
+      );
+      allow delete: if isAdmin();
+    }
+
+    // 6. Test connection document
+    match /test/{testId} {
+      allow read, write: if isSignedIn();
+    }
+  }
+}

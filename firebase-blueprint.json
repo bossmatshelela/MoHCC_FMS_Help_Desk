@@ -1,0 +1,259 @@
+{
+  "entities": {
+    "DocumentRecord": {
+      "title": "DocumentRecord",
+      "description": "Ministry of Health and Child Care digitized and encrypted official record.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique record identifier e.g. DOC-2026-904"
+        },
+        "referenceNo": {
+          "type": "string",
+          "description": "Physical file barcode or QR reference number e.g. MOHCC-PED-2026-90412"
+        },
+        "title": {
+          "type": "string",
+          "description": "Document title",
+          "maxLength": 256
+        },
+        "category": {
+          "type": "string",
+          "description": "MoHCC Department category",
+          "enum": [
+            "Reproductive, Maternal & Child Health",
+            "IT Help Desk & Infrastructure",
+            "Epidemiology & Disease Control",
+            "Pharmacy & Logistics (NatPharm)",
+            "Clinical Guidelines & Standards",
+            "Finance & Health Procurement",
+            "Personnel & Administration"
+          ]
+        },
+        "confidentiality": {
+          "type": "string",
+          "description": "Security clearance level",
+          "enum": ["PUBLIC", "INTERNAL", "CONFIDENTIAL", "RESTRICTED_MEDICAL"]
+        },
+        "status": {
+          "type": "string",
+          "description": "Review workflow status",
+          "enum": ["PENDING_REVIEW", "APPROVED", "ARCHIVED", "FLAGGED"]
+        },
+        "dateCreated": {
+          "type": "string",
+          "description": "ISO timestamp of ingestion"
+        },
+        "lastModified": {
+          "type": "string",
+          "description": "ISO timestamp of last modification"
+        },
+        "authorName": {
+          "type": "string",
+          "description": "Name of ingest officer"
+        },
+        "authorDepartment": {
+          "type": "string",
+          "description": "Department of ingest officer"
+        },
+        "summary": {
+          "type": "string",
+          "description": "Executive synopsis"
+        },
+        "ocrText": {
+          "type": "string",
+          "description": "Digitized OCR transcript"
+        },
+        "tags": {
+          "type": "array",
+          "description": "Indexing tags"
+        },
+        "scanQuality": {
+          "type": "number",
+          "description": "Optical scan quality percentage"
+        },
+        "fileSize": {
+          "type": "number",
+          "description": "Payload size in bytes"
+        },
+        "pageCount": {
+          "type": "number",
+          "description": "Number of digitized pages"
+        },
+        "encryption": {
+          "type": "object",
+          "description": "AES-GCM-256 Envelope metadata"
+        },
+        "extractedEntities": {
+          "type": "array",
+          "description": "Key clinical/technical entities extracted from scan"
+        },
+        "reviewHistory": {
+          "type": "array",
+          "description": "Log of staff review actions and approvals"
+        }
+      },
+      "required": ["id", "referenceNo", "title", "category", "confidentiality", "status", "ocrText"]
+    },
+    "AuditLogRecord": {
+      "title": "AuditLogRecord",
+      "description": "Cryptographically chained immutable access audit event.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Log entry identifier"
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "ISO timestamp"
+        },
+        "action": {
+          "type": "string",
+          "description": "Audit action type"
+        },
+        "userId": {
+          "type": "string",
+          "description": "ID of operator"
+        },
+        "userName": {
+          "type": "string",
+          "description": "Name of operator"
+        },
+        "userRole": {
+          "type": "string",
+          "description": "Role of operator"
+        },
+        "details": {
+          "type": "string",
+          "description": "Description of action"
+        },
+        "severity": {
+          "type": "string",
+          "description": "Severity level",
+          "enum": ["INFO", "NOTICE", "WARNING", "CRITICAL"]
+        },
+        "sha256Digest": {
+          "type": "string",
+          "description": "Chained SHA-256 block hash"
+        },
+        "previousDigest": {
+          "type": "string",
+          "description": "Prior block SHA-256 hash"
+        }
+      },
+      "required": ["id", "timestamp", "action", "userName", "severity", "sha256Digest"]
+    },
+    "NotificationRecord": {
+      "title": "NotificationRecord",
+      "description": "Automated system update, review deadline, or security alert.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Notification ID"
+        },
+        "title": {
+          "type": "string",
+          "description": "Alert title"
+        },
+        "message": {
+          "type": "string",
+          "description": "Alert message body"
+        },
+        "type": {
+          "type": "string",
+          "description": "Notification category",
+          "enum": ["DEADLINE", "PENDING_REVIEW", "SYSTEM_UPDATE", "SECURITY_ALERT"]
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "ISO creation timestamp"
+        },
+        "read": {
+          "type": "boolean",
+          "description": "Read receipt status"
+        },
+        "targetRole": {
+          "type": "string",
+          "description": "Optional specific role recipient"
+        },
+        "relatedDocumentId": {
+          "type": "string",
+          "description": "Associated document reference"
+        }
+      },
+      "required": ["id", "title", "message", "type", "timestamp", "read"]
+    },
+    "UserProfileRecord": {
+      "title": "UserProfileRecord",
+      "description": "MoHCC staff profile and RBAC role assignment.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "User identifier (UID or badgeId)"
+        },
+        "name": {
+          "type": "string",
+          "description": "Full staff member name"
+        },
+        "email": {
+          "type": "string",
+          "description": "MoHCC work email address"
+        },
+        "role": {
+          "type": "string",
+          "description": "Assigned RBAC role",
+          "enum": [
+            "ADMINISTRATOR",
+            "HELP_DESK_STAFF",
+            "READ_ONLY_VIEWER",
+            "MEDICAL_OFFICER"
+          ]
+        },
+        "department": {
+          "type": "string",
+          "description": "MoHCC department branch"
+        },
+        "badgeId": {
+          "type": "string",
+          "description": "Physical smart badge ID"
+        },
+        "clearance": {
+          "type": "string",
+          "description": "Security clearance level",
+          "enum": ["PUBLIC", "INTERNAL", "CONFIDENTIAL", "RESTRICTED_MEDICAL"]
+        },
+        "mfaEnabled": {
+          "type": "boolean",
+          "description": "MFA activation status"
+        },
+        "biometricActive": {
+          "type": "boolean",
+          "description": "Biometric FIDO2 status"
+        }
+      },
+      "required": ["id", "name", "email", "role", "department", "badgeId", "clearance"]
+    }
+  },
+  "firestore": {
+    "/documents/{documentId}": {
+      "schema": "DocumentRecord",
+      "description": "Stores encrypted and categorized MoHCC health & IT documents."
+    },
+    "/auditLogs/{logId}": {
+      "schema": "AuditLogRecord",
+      "description": "Immutable chained audit log trail tracking all file access and reviews."
+    },
+    "/notifications/{notificationId}": {
+      "schema": "NotificationRecord",
+      "description": "Automated system notifications for pending reviews, deadlines, and updates."
+    },
+    "/users/{userId}": {
+      "schema": "UserProfileRecord",
+      "description": "Authorized MoHCC staff profiles and verified RBAC permissions."
+    }
+  }
+}
